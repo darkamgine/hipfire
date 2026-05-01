@@ -175,3 +175,12 @@ All committed on `overnight/2026-05-01`, pushed to origin.
 - Branch `fix/mmq-screen-cache-stale-on-reload`, fast-forward onto master at `370a7aa`. Coherence + speed gates green.
 - Smoke: 4 sequential model swaps (0.8B MQ4 -> 9B MQ4 -> 0.8B MQ4 -> 9B MQ3) without panic. Per-swap responses coherent.
 
+
+### 2026-05-01T09:38Z | Codex follow-up #2: hipGraph state on model unload
+
+- Codex stop-time review caught second half of the cache-staleness issue: captured hipGraphs (single-slot AR + DFlash verify + DFlash replay) survived unload along with their warmup-tracker sets.
+- Captured graphs bake device pointers into kernarg memory at hipStreamEndCapture time. Without invalidation, model swaps replay against dangling or wrong-content tensors.
+- Fix: new `Gpu::invalidate_graph_state()` calls graph_destroy + verify_graph_destroy_all + replay_graph_destroy_all (each already handles hipGraphExecDestroy + hipGraphDestroy and clears its capture/warmup state). unload_model invokes it after invalidate_weight_caches, before drain_pool.
+- Branch `fix/graph-cache-stale-on-reload`, fast-forward onto master at `c314f0e`. Coherence + speed gates green.
+- Smoke: 4 swaps with DFlash on the second cycle. serve.log shows multiple `warmup for B=16 complete` + `captured for B=16` entries with distinct blob counts (1204 vs 604), confirming per-load re-warm. Pre-fix would have shown a single warmup + capture across all swaps.
+
