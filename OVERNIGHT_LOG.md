@@ -63,3 +63,16 @@
 - #105 (CPU+GPU split): feature request, listed in DEFERRED.md, replied with #76/#77 references for the underlying tiering design work.
 - #107 (thinking + chat template): docs/MODELS.md +112 lines covering thinking-mode mechanics, thinking on/off semantics + the /no_think directive ban history, max_think_tokens, OpenAI API knobs from #79, ChatML envelope, prompt_normalize step. Cherry-picked onto master at `ee7d3cc`. Status: FIXED (Tier 3 docs).
 
+
+### 2026-05-01T09:08Z | Phase 2: MQ3 residual fusion shipped
+
+- Branch `feat/mq3-residual-fusion`, cherry-picked onto master at `ce1e9c5`. Pre-commit gates ran (coherence + speed): both green.
+- Kernel: `kernels/src/gemv_hfq3g256_residual.hip` (NEW); 32-thread wave32, += into y, byte-identical body to gemv_hfq3g256 modulo final-write op. VGPR / launch_bounds unchanged.
+- Engine wiring: `weight_gemv_residual` in `crates/engine/src/llama.rs` gains HFQ3G256 + MQ3G256 fast paths. MQ3 path mirrors MQ4: rotate_x_mq into mq_x_rot scratch, then dispatch the fused residual GEMV.
+- Bench (gfx1100, 7900 XTX, mean of 3 runs):
+  - 0.8B MQ3 decode: 299.3 -> 309.7 tok/s (+3.5%)
+  - 9B  MQ3 decode: 109.8 -> 111.6 tok/s (+1.6%)
+- Quality: coherence-gate short battery clean (4 MQ4 prompts unaffected); 9B MQ3 cap + code smokes both fluent.
+- Bench raw: `bench/overnight-20260501T090528Z-mq3-residual-fusion.txt`.
+- Note: commit message accidentally references "(#82)". Internal task-list ID #82 means "megakernel project"; GitHub issue #82 is the Windows hipcc bug. Different numbering schemes; no functional dependency.
+
