@@ -57,3 +57,9 @@
 - Added gfx1152 to 9 arch-gate sites across dispatch + daemon + tests + install. Addresses the incoherent-output symptom (gfx1152 was falling through to gfx1100-shape dispatch).
 - Segfault remains unaddressed. Reporter needs to provide a backtrace; concrete repro added to MANUAL_REVIEW.md and re-asked in issue comment.
 - Status: PARTIAL FIX (arch-gating shipped) + ESCALATED (segfault root cause).
+
+### 2026-05-01T09:35Z | #105 DEFER + #107 DOCS LANDED
+
+- #105 (CPU+GPU split): feature request, listed in DEFERRED.md, replied with #76/#77 references for the underlying tiering design work.
+- #107 (thinking + chat template): docs/MODELS.md +112 lines covering thinking-mode mechanics, thinking on/off semantics + the /no_think directive ban history, max_think_tokens, OpenAI API knobs from #79, ChatML envelope, prompt_normalize step. Cherry-picked onto master at `ee7d3cc`. Status: FIXED (Tier 3 docs).
+
