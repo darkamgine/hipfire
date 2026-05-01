@@ -42,3 +42,11 @@
 - Single-file CLI fix: prepend `dirname(target_path)` as highest-priority DFlash draft auto-discovery candidate. Cwd-relative + homedir candidates kept as fallbacks. Mirrors how Linux-installer and Docker layouts diverge: the only reliable "where the user keeps weights" signal is the directory the target itself was loaded from.
 - Pure-function unit verification + live serve test on 7900 XTX from cwd=/tmp both confirm. Reporter's HIPFIRE_DFLASH_DRAFT env workaround still respected.
 - Status: FIXED.
+
+### 2026-05-01T09:10Z | #82 FIX (Windows-only) + ESCALATE
+
+- Branch `fix/82-windows-hipcc-space-in-path`; cherry-picked onto master at `88a52bb`.
+- Single-function Windows-cfg helper that converts spaces-bearing -I paths to 8.3 short form via `cmd /c for ... echo %~sA`. Linux/macOS pass-through.
+- Cargo release build clean. Cannot test on Windows from this box. MANUAL_REVIEW entry added with concrete reproduction script.
+- Issue replied: https://github.com/Kaden-Schutt/hipfire/issues/82
+- Status: FIXED (Windows-only path) + ESCALATED (native verification).

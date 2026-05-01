@@ -16,3 +16,17 @@ Sorted by what unblocks the most downstream work first.
 - Files touched: `cli/index.ts` (parser + helpers), `cli/parse_tool_calls.test.ts` (new tests).
 - Branch: `fix/111-tool-call-mq4-malformation`
 - Commits: `62e5767` on master (cherry of `9e73ccc` on overnight branch).
+
+
+## #82 Windows hipcc space-in-path: fix shipped, native verification escalates
+
+- Why escalated: fix is Windows-only code path (`#[cfg(target_os = "windows")]`). I cannot run hipcc-on-Windows from the Linux dev box.
+- What was tried:
+  - Diagnosed root cause already (in-thread comment): hipcc.bat re-tokenises argv on inner clang.exe without preserving embedded-space quoting.
+  - Implemented `win_short_path_if_needed` helper that uses `cmd /c for %A in (...) do echo %~sA` to return the 8.3 alias when a space is present. Pass-through on non-Windows / error.
+  - `cargo build --release -p rdna-compute` passes; Linux no-op behaviour confirmed.
+- Hypothesis: the 8.3 form (e.g. `C:\PROGRA~1\AMD\ROCm\6.4\include`) embeds cleanly through hipcc.bat's argv re-tokenisation because clang's path parser does not split on `~`. This was the user's documented workaround (HIP_PATH override or symlink); we now do it transparently.
+- Suggested next step: ask the reporter (or a future Windows-bring-up bench) to verify `hipfire run qwen3.6:27b "..."` works without manual symlink / HIP_PATH override on a clean ROCm 6.4 install at the canonical `C:\Program Files\AMD\ROCm\6.4` path. If it works, close. If it still fails, paste stderr; symptom should now point to a different code site (clang seeing short path but a downstream linker stage not).
+- Files touched: `crates/rdna-compute/src/compiler.rs`.
+- Branch: `fix/82-windows-hipcc-space-in-path` (also on master).
+- Commits: `88a52bb` on master.
