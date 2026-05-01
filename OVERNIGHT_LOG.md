@@ -1,8 +1,79 @@
 # Overnight Log 2026-05-01
 
-## Morning Summary (filled at session end)
+## Morning Summary
 
-(empty until termination)
+Session: 2026-05-01T08:20Z to ~09:20Z (~1h active; rest is GPU + bench wait).
+Branch state: master fast-forwarded through 11 new commits, all pushed.
+Working tree clean. Overnight branch `overnight/2026-05-01` carries all
+telemetry; not merged (and shouldn't be, by design).
+
+### Phase 1: Issue queue
+
+| Issue | Tier | Status | What landed | Reply |
+|---|---|---|---|---|
+| #111 | 1 | FIXED + ESCALATED | Defensive parseToolCalls covering flat + XML-tag MQ4 malformations; 10 unit tests; calibration-retrain ask escalated | [comment](https://github.com/Kaden-Schutt/hipfire/issues/111#issuecomment-4358518730) |
+| #110 | 2 | FIXED | DFlash draft auto-discovery prepends dirname(target) so Docker / non-default mounts work without HIPFIRE_DFLASH_DRAFT env | [comment](https://github.com/Kaden-Schutt/hipfire/issues/110#issuecomment-4358534885) |
+| #112 | 2 | FIXED | scripts/compile-kernels.ps1 created + install.ps1 invokes daemon.exe --precompile (parity with install.sh) | [comment](https://github.com/Kaden-Schutt/hipfire/issues/112#issuecomment-4358520755) |
+| #87  | 2 | ADDRESSED (awaits closure) | PR #104 merged + tri-state mmq_screen toggle (off/on/auto) shipped pre-overnight | [comment](https://github.com/Kaden-Schutt/hipfire/issues/87#issuecomment-4358521609) |
+| #82  | 2 | PARTIAL FIX + ESCALATED | Windows 8.3-short-path conversion in compiler.rs `-I` flag handling; native verification escalates | [comment](https://github.com/Kaden-Schutt/hipfire/issues/82#issuecomment-4358541721) |
+| #50  | 2 | PARTIAL FIX + ESCALATED | gfx1152 added to all RDNA 3.5 dispatch / cache / MMQ gates (addresses incoherent output); segfault still needs reporter backtrace | [comment](https://github.com/Kaden-Schutt/hipfire/issues/50#issuecomment-4358551547) |
+| #107 | 3 | FIXED | docs/MODELS.md +112 line "Thinking mode and chat templates" section | [comment](https://github.com/Kaden-Schutt/hipfire/issues/107#issuecomment-4358559274) |
+| #105 | feat | DEFERRED | Listed in DEFERRED.md; pointed at #76 / #77 design proposals | [comment](https://github.com/Kaden-Schutt/hipfire/issues/105#issuecomment-4358554026) |
+
+7 issues touched; 4 fully fixed, 2 partial-with-escalation, 1 awaiting
+closure, 1 deferred.
+
+### Phase 2: Megakernel
+
+3 perf wins on the MQ3 / MQ6 decode path (additive; per-stage paths
+unchanged; no quality regression on coherence-gate or speed-gate):
+
+| Commit | Change | Win |
+|---|---|---|
+| `ce1e9c5` | gemv_hfq3g256_residual.hip + weight_gemv_residual MQ3 + HFQ3 fast paths | 0.8B MQ3 +3.5%, 9B MQ3 +1.6% |
+| `7c47609` | weight_gemv_swiglu_residual MQ3 arm using fused_silu_mul_rotate_mq + gemv_hfq3g256_residual | 0.8B MQ3 +1.9% (cumulative +5.5%), 9B MQ3 +1.1% (cumulative +2.7%) |
+| `d35ec72` | gemv_hfq6g256_residual.hip + MQ6 + HFQ6 paths in both wrappers | 9B carnice MQ6 +1.3% |
+
+Final speed-gate (canonical): 14/14 metrics passed within ±5%
+tolerance. 4B MQ4 pp32 +12.2%, decode -1.7%. 9B MQ4 decode -2.0%. 27B
+MQ4 decode -2.8%. All within session-noise band.
+
+VGPR budget unchanged on all three new kernels (identical
+launch_bounds to their non-residual counterparts).
+
+### Megakernel work NOT done
+
+- Full FFN megakernel (rmsnorm + gate + up + silu*mul + down +
+  residual fused into one launch): higher reward (~10-20% projected)
+  but a substantive rewrite with quality-precision risk and VGPR
+  exposure. Not started; megakernel target #82 in the internal task
+  list remains pending.
+- K4-unroll on gemv_hfq3g256: already implemented on
+  `fix/mq3-mq2-cli-guards` (commit `0003103`, 9B 114 -> 141 tok/s,
+  +24%) but that branch is the held PR #109 bundle. Not duplicated
+  here per Rule 8.
+- gfx1152 segfault root cause (#50): blocked on backtrace from
+  reporter.
+- MQ4 calibration retrain (#111): blocked on quantizer-side data
+  pipeline + GPU time.
+
+### Files maintained
+
+- `OVERNIGHT_PLAN.md` (initial triage queue, untouched after seed)
+- `OVERNIGHT_LOG.md` (this file; append-only timeline below)
+- `MANUAL_REVIEW.md` (#82 + #50 + #111 escalations)
+- `DEFERRED.md` (feature-request inbox)
+- `bench/overnight-*.txt` x 3 (one per kernel commit)
+
+All committed on `overnight/2026-05-01`, pushed to origin.
+
+### Recommended morning order
+
+1. Read this summary; spot-check the 8 issue comments.
+2. Decide: close #112 (fully fixed) and ideally #87 + #107 (also fully addressed).
+3. Decide if PR #109 (fix/mq3-mq2-cli-guards K4-unroll bundle) should ship now that the residual-fusion infrastructure is on master. The K4 work would compose cleanly on top of `d35ec72`.
+4. Push #50 / #82 reporters for the requested debug info.
+5. If you want the FFN megakernel, start fresh with full attention on it; partial-night attempts on a 6-stage fusion chain are too risky for autonomous work.
 
 ---
 
