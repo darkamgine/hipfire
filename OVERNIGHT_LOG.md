@@ -76,3 +76,14 @@
 - Bench raw: `bench/overnight-20260501T090528Z-mq3-residual-fusion.txt`.
 - Note: commit message accidentally references "(#82)". Internal task-list ID #82 means "megakernel project"; GitHub issue #82 is the Windows hipcc bug. Different numbering schemes; no functional dependency.
 
+
+### 2026-05-01T09:11Z | Phase 2: MQ3 swiglu fusion shipped (cumulative +5.5% / +2.7%)
+
+- Branch `feat/mq3-swiglu-fusion`, fast-forward onto master at `7c47609`.
+- Single-file llama.rs change: weight_gemv_swiglu_residual gains an MQ3G256 arm using fused_silu_mul_rotate_mq + gemv_hfq3g256_residual (both kernels already exist).
+- Saves 2 launches/FFN/layer/token vs generic path (silu_mul + add_inplace).
+- 0.8B MQ3 decode: 309.7 -> 315.6 tok/s (+1.9% this commit, +5.5% cumulative).
+- 9B MQ3 decode: 111.6 -> 112.8 tok/s (+1.1% this commit, +2.7% cumulative).
+- Quality smoke clean. Pre-commit gates green.
+- Bench raw: bench/overnight-20260501T091104Z-mq3-swiglu-fusion.txt.
+
