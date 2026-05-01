@@ -27,3 +27,11 @@
   - Mine (multi-tool stream): `{"name": "write", "path": "...", "content": "..."}` instead of `{"name": "write", "arguments": {...}}`. JSON parses fine, but `tc.arguments` is undefined and the existing parseToolCalls (cli/index.ts:1541) does `JSON.stringify(tc.arguments || {})` → "{}", silently dropping all args. The tool call is structurally wrong; the downstream harness gets an empty-arg call and the file is never written. Same-shape failure mode as the reporter.
 - Single-tool non-stream call produced clean nested JSON, so the malformation depends on prompt shape (multi-tool, system prompt, longer history). Matches the reporter's report ("agentic harness").
 - Suspected layer: MQ4 weight quantization (FWHT rotation shifts P over structured-token positions). Same root cause class as #87. Per Rule 1 (quality regressions are bugs), root cause = quant calibration; ship fix = defensive parser; calibration retrain escalates to MANUAL_REVIEW.
+
+### 2026-05-01T08:55Z | #111 FIX + MERGE + REPLY
+
+- Branch `fix/111-tool-call-mq4-malformation` off overnight; cherry-picked into overnight at `9e73ccc`; landed on master at `62e5767` (e932811 originally, telemetry-only revert commits c0ac542+62e5767 followed to keep master clean of overnight scratch).
+- Defensive parseToolCalls repair shipped: 3-form parser (spec / flat coerce / XML tag) + balanced-brace JSON walker. 10/10 bun tests pass. End-to-end repro now emits `finish_reason: tool_calls` with non-empty arguments.
+- MANUAL_REVIEW entry added: calibration retrain ask for MQ4 (root cause, not parser layer).
+- Issue comment posted at https://github.com/Kaden-Schutt/hipfire/issues/111#issuecomment-4358518730 with reproduction summary, fix description, verification, and the calibration escalation note.
+- Status: FIXED (parser stopgap) + ESCALATED (calibration root cause).
