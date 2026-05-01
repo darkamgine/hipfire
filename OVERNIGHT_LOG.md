@@ -35,3 +35,10 @@
 - MANUAL_REVIEW entry added: calibration retrain ask for MQ4 (root cause, not parser layer).
 - Issue comment posted at https://github.com/Kaden-Schutt/hipfire/issues/111#issuecomment-4358518730 with reproduction summary, fix description, verification, and the calibration escalation note.
 - Status: FIXED (parser stopgap) + ESCALATED (calibration root cause).
+
+### 2026-05-01T09:00Z | #110 FIX + MERGE + REPLY
+
+- Branch `fix/110-dflash-draft-docker-path` off overnight; cherry-picked onto master at `7f2c0c5`.
+- Single-file CLI fix: prepend `dirname(target_path)` as highest-priority DFlash draft auto-discovery candidate. Cwd-relative + homedir candidates kept as fallbacks. Mirrors how Linux-installer and Docker layouts diverge: the only reliable "where the user keeps weights" signal is the directory the target itself was loaded from.
+- Pure-function unit verification + live serve test on 7900 XTX from cwd=/tmp both confirm. Reporter's HIPFIRE_DFLASH_DRAFT env workaround still respected.
+- Status: FIXED.
