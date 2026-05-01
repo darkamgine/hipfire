@@ -87,3 +87,12 @@
 - Quality smoke clean. Pre-commit gates green.
 - Bench raw: bench/overnight-20260501T091104Z-mq3-swiglu-fusion.txt.
 
+
+### 2026-05-01T09:18Z | Phase 2: MQ6 residual + swiglu fusion shipped (+1.3% on 9B MQ6)
+
+- Branch `feat/mq6-residual-fusion`, fast-forward onto master at `d35ec72`. Pre-commit gates green.
+- New kernel: gemv_hfq6g256_residual.hip (mirrors gemv_hfq6g256 with += final write).
+- weight_gemv_residual: previously generic-fallback for HFQ6 + MQ6, now both have fast paths. weight_gemv_swiglu_residual: MQ6 arm added.
+- Bench: carnice-9b.mq6 decode 85.7 -> 86.8 tok/s (+1.3%). Smaller win than MQ3 because per-token GEMV cost is larger relative to launch overhead at 6-bit precision.
+- Quality smoke clean; coherence-gate green.
+- Bench raw: bench/overnight-20260501T091651Z-mq6-residual-fusion.txt.
