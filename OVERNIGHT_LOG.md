@@ -167,3 +167,11 @@ All committed on `overnight/2026-05-01`, pushed to origin.
 - Bench: carnice-9b.mq6 decode 85.7 -> 86.8 tok/s (+1.3%). Smaller win than MQ3 because per-token GEMV cost is larger relative to launch overhead at 6-bit precision.
 - Quality smoke clean; coherence-gate green.
 - Bench raw: bench/overnight-20260501T091651Z-mq6-residual-fusion.txt.
+
+### 2026-05-01T09:30Z | Codex follow-up: weight-cache invalidation on model unload (#87)
+
+- Codex stop-time review flagged: mmq_screen_cache + fp16_shadow_cache survived model unload, keyed on device pointers that the pool reused for the next model's weights.
+- Fix: new `Gpu::invalidate_weight_caches()` clears mmq_screen_cache and drains fp16_shadow_cache (releasing the owned FP16 shadow tensors). Called from unload_model after weights are freed and before drain_pool.
+- Branch `fix/mmq-screen-cache-stale-on-reload`, fast-forward onto master at `370a7aa`. Coherence + speed gates green.
+- Smoke: 4 sequential model swaps (0.8B MQ4 -> 9B MQ4 -> 0.8B MQ4 -> 9B MQ3) without panic. Per-swap responses coherent.
+
