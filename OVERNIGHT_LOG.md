@@ -50,3 +50,10 @@
 - Cargo release build clean. Cannot test on Windows from this box. MANUAL_REVIEW entry added with concrete reproduction script.
 - Issue replied: https://github.com/Kaden-Schutt/hipfire/issues/82
 - Status: FIXED (Windows-only path) + ESCALATED (native verification).
+
+### 2026-05-01T09:25Z | #50 PARTIAL FIX (arch-gating) + ESCALATE (segfault)
+
+- Branch `fix/50-gfx1152-arch-gating`; master at `d9e8dc5`. Pre-commit gates ran automatically (dispatch.rs staged): coherence battery + speed gate both green on gfx1100 (4B MQ4 pp32 +9.3%, decode -1.6%, within tolerance).
+- Added gfx1152 to 9 arch-gate sites across dispatch + daemon + tests + install. Addresses the incoherent-output symptom (gfx1152 was falling through to gfx1100-shape dispatch).
+- Segfault remains unaddressed. Reporter needs to provide a backtrace; concrete repro added to MANUAL_REVIEW.md and re-asked in issue comment.
+- Status: PARTIAL FIX (arch-gating shipped) + ESCALATED (segfault root cause).

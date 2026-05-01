@@ -30,3 +30,16 @@ Sorted by what unblocks the most downstream work first.
 - Files touched: `crates/rdna-compute/src/compiler.rs`.
 - Branch: `fix/82-windows-hipcc-space-in-path` (also on master).
 - Commits: `88a52bb` on master.
+
+
+## #50 gfx1152 segfault on `daemon --precompile`
+
+- Why escalated: hardware-blocked (no Strix Halo on local box) + need a backtrace from the reporter to root-cause the post-precompile-print segfault.
+- What was tried:
+  - Defensive fix shipped (d9e8dc5 on master): added gfx1152 to all RDNA 3.5 dispatch / MMQ / cache / install gates. This addresses the second symptom (incoherent output) which had a clear arch-gating root cause: gfx1152 was missing from `gfx1150 | gfx1151` everywhere, falling through to gfx1100 with mismatched scheduling / tiling.
+  - Coherence + speed gates on gfx1100 both green; no regression on the supported arches.
+- Hypothesis (segfault): post-precompile path crashes in either Gpu shutdown (HIP runtime cleanup) or a capability-probe re-entry. Not kernel JIT (that completes the print line first).
+- Suggested next step: ask reporter to grab `gdb -batch -ex 'bt full' -ex 'thread apply all bt'` against a coredump, OR `coredumpctl gdb daemon`. Without a stack frame I'm guessing. Also have them re-run inference on master to confirm whether the arch-gating fix cleared the incoherent-output symptom.
+- Files touched: dispatch.rs / daemon.rs / install.sh / test arch lists.
+- Branch: `fix/50-gfx1152-arch-gating` (also master `d9e8dc5`).
+
