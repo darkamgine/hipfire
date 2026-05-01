@@ -184,3 +184,10 @@ All committed on `overnight/2026-05-01`, pushed to origin.
 - Branch `fix/graph-cache-stale-on-reload`, fast-forward onto master at `c314f0e`. Coherence + speed gates green.
 - Smoke: 4 swaps with DFlash on the second cycle. serve.log shows multiple `warmup for B=16 complete` + `captured for B=16` entries with distinct blob counts (1204 vs 604), confirming per-load re-warm. Pre-fix would have shown a single warmup + capture across all swaps.
 
+
+### 2026-05-01T09:43Z | Codex follow-up #3: AR forward warmup state on reload
+
+- Codex stop-time review caught: graph_destroy resets graph_verify_n / graph_verify_warmup / capture_blobs but leaves `ar_forward_warmed_up: bool` stuck `true`. After model swap, the AR forward path jumps straight into capture mode on the new model before lazy JIT / scratch allocations have run against the new tensors.
+- One-line fix: reset `ar_forward_warmed_up = false` inside graph_destroy. Mirrors verify_graph_destroy_all + replay_graph_destroy_all which already clear their HashSet warmups.
+- Branch `fix/ar-graph-warmup-stale-on-reload`, fast-forward onto master at `063d398`. Coherence + speed gates green via pre-commit.
+
